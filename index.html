@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f5f3ee" />
+    <title>李杜诗句图谱</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="李杜诗句图谱首页">
+        <span class="brand-seal">李杜</span>
+        <span class="brand-name">诗句图谱</span>
+      </a>
+      <nav class="main-nav" aria-label="页面导航">
+        <a class="nav-link active" href="#overview">总览</a>
+        <a class="nav-link" href="#pairs">句对</a>
+        <a class="nav-link" href="#poems">作品</a>
+      </nav>
+      <div class="source-note"><span class="source-dot"></span>基于随附 CSV</div>
+    </header>
+
+    <main id="top" class="page-shell">
+      <section class="intro" id="overview">
+        <div class="intro-copy">
+          <p class="kicker">文本数据 · 句与句之间</p>
+          <h1>李白 × 杜甫</h1>
+          <p class="intro-subtitle">从诗句配对中，观察两位诗人的词句相似度。</p>
+        </div>
+        <div class="intro-aside" aria-label="数据范围">
+          <span>配对数据</span>
+          <strong id="introPairCount">—</strong>
+          <span>每条记录对应一组诗句</span>
+        </div>
+      </section>
+
+      <section class="metric-strip" aria-label="数据概览">
+        <article class="metric">
+          <span class="metric-label">相似诗句配对</span>
+          <strong id="metricPairs">—</strong>
+          <span class="metric-foot">来自李白-杜甫.csv</span>
+        </article>
+        <article class="metric">
+          <span class="metric-label">李白诗句</span>
+          <strong id="metricLiLines">—</strong>
+          <span class="metric-foot"><span id="metricLiWorks">—</span> 首作品</span>
+        </article>
+        <article class="metric">
+          <span class="metric-label">杜甫诗句</span>
+          <strong id="metricDuLines">—</strong>
+          <span class="metric-foot"><span id="metricDuWorks">—</span> 首作品</span>
+        </article>
+        <article class="metric">
+          <span class="metric-label">平均相似度</span>
+          <strong id="metricAverage">—</strong>
+          <span class="metric-foot">数据中的相似度均值</span>
+        </article>
+      </section>
+
+      <section class="analysis-grid" aria-label="相似度概览">
+        <article class="panel distribution-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-index">01 / 分布</p>
+              <h2>相似度分布</h2>
+            </div>
+            <span class="unit-label">相似度区间 · 配对数</span>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="distributionChart" aria-label="相似度区间配对数量柱状图"></canvas>
+            <div class="chart-tooltip" id="chartTooltip" hidden></div>
+          </div>
+          <div class="chart-legend"><span class="legend-mark"></span><span>诗句配对数</span><span class="legend-note">区间宽度 0.05</span></div>
+        </article>
+
+        <article class="panel highlights-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-index">02 / 高相似</p>
+              <h2>最接近的句子</h2>
+            </div>
+            <button class="text-button" id="showPairsButton" type="button">查看全部 <span aria-hidden="true">↗</span></button>
+          </div>
+          <div class="highlight-list" id="highlightList" aria-live="polite"></div>
+        </article>
+      </section>
+
+      <section class="panel pairs-section" id="pairs">
+        <div class="section-topline">
+          <div>
+            <p class="section-index">03 / 逐条检索</p>
+            <h2>诗句配对</h2>
+          </div>
+          <span class="result-count" id="pairResultCount">—</span>
+        </div>
+        <div class="toolbar">
+          <label class="search-box">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input id="pairSearch" type="search" placeholder="搜索诗名或诗句" autocomplete="off" />
+          </label>
+          <div class="filter-group" role="group" aria-label="相似度筛选">
+            <button type="button" class="filter-chip selected" data-filter="all">全部</button>
+            <button type="button" class="filter-chip" data-filter="90">≥ 0.90</button>
+            <button type="button" class="filter-chip" data-filter="80">≥ 0.80</button>
+            <button type="button" class="filter-chip" data-filter="70">≥ 0.70</button>
+          </div>
+          <label class="sort-control">排序
+            <select id="pairSort" aria-label="配对排序">
+              <option value="score">相似度从高到低</option>
+              <option value="source">按李白作品</option>
+            </select>
+          </label>
+        </div>
+        <div class="pair-table-head" aria-hidden="true">
+          <span>李白</span><span></span><span>杜甫</span><span>相似度</span>
+        </div>
+        <div class="pair-list" id="pairList" aria-live="polite"></div>
+        <div class="list-footer">
+          <span id="listStatus">—</span>
+          <button class="load-more" id="loadMore" type="button">加载更多 <span aria-hidden="true">↓</span></button>
+        </div>
+      </section>
+
+      <section class="panel poems-section" id="poems">
+        <div class="section-topline">
+          <div>
+            <p class="section-index">04 / 作品索引</p>
+            <h2>诗句原文</h2>
+          </div>
+          <div class="segmented" role="group" aria-label="选择诗人">
+            <button type="button" class="selected" data-poet="li">李白</button>
+            <button type="button" data-poet="du">杜甫</button>
+          </div>
+        </div>
+        <div class="poem-toolbar">
+          <label class="poem-search"><span aria-hidden="true">⌕</span><input id="poemSearch" type="search" placeholder="查找作品或诗句" autocomplete="off" /></label>
+          <span class="result-count" id="poemResultCount">—</span>
+        </div>
+        <div class="poem-grid" id="poemGrid" aria-live="polite"></div>
+        <div class="list-footer">
+          <span id="poemListStatus">—</span>
+          <button class="load-more" id="poemLoadMore" type="button">加载更多 <span aria-hidden="true">↓</span></button>
+        </div>
+      </section>
+      <footer class="site-footer"><span>李杜诗句图谱</span><span>诗句、诗名与数值均来自随附 CSV 文件</span></footer>
+    </main>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
